@@ -36,6 +36,16 @@ module WeatherTS
       Thread.current[:ctx]
     end
 
+    def extract_time(filename)
+      if matches = filename.match(/\.([0-9]+\.[0-9]+)\./)
+        date = matches[1]
+        t = Time.strptime(date, '%Y%m%d.%H%M') + Time.zone_offset('CEST') # the timestamp is already in UTC
+        return t.to_i
+      else
+        raise 'failed to recognize timestamp in filename'
+      end
+    end
+
   end
 
 
@@ -94,10 +104,12 @@ module WeatherTS
       log.debug "to be extracted: #{context[:to_be_extracted]}"
 
       # ETL
-
-      @extractor.exec
-      @transformer.exec
-      @loader.exec
+      context[:to_be_extracted].each do |ds|
+        context[:extract] = ds
+        @extractor.exec
+        @transformer.exec
+        @loader.exec
+      end
 
       log.info 'Bye bye'
     end
@@ -110,3 +122,8 @@ WeatherTS::logger = Logger.new(STDOUT)
 WeatherTS::logger.level = Logger::INFO
 WeatherTS::logger.level = Logger::DEBUG if __FILE__ == $0 # DEVELOPMENT MODE
 WeatherTS::App.instance.run
+
+# require 'influxdb'
+# db = InfluxDB::Client.new
+# db.create_database('chmi')
+# puts db.list_databases

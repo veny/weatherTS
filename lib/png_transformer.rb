@@ -29,23 +29,24 @@ module WeatherTS
       '#a00000' => 56, # red_dark
       '#fcfcfc' => 60  # gray_light
     }
-    
+
     def exec
-      a = []
-      context[:extracted].each do |file|
-        log.info "processing file: #{file}"
-        img = ChunkyPNG::Image.from_file file
-        log.fatal "unknow image resolution: #{img.width}x#{img.height}" if img.width != 680 or img.height != 460
-        (0..595).each do |x|
-          a << []
-          (100..409).each do |y|
-            color = ChunkyPNG::Color.to_hex(img[x, y], false)
-            log.fatal "unknown color: #{color}, x=#{x}, y=#{y}" unless @@colors.has_key? color
-            a.last << @@colors[color]
-          end
+      rslt = { timestamp: nil, pixels: [] }
+      file = context[:extracted] # e.g. /tmp/pacz2gmaps3.z_max3d.20170406.0850.0.png
+      log.info "processing file: #{file}"
+      rslt[:timestamp] = extract_time file
+
+      img = ChunkyPNG::Image.from_file file
+      log.fatal "unknow image resolution: #{img.width}x#{img.height}" if img.width != 680 or img.height != 460
+      (0..595).each do |x|
+        rslt[:pixels] << []
+        (100..409).each do |y|
+          color = ChunkyPNG::Color.to_hex(img[x, y], false)
+          log.fatal "unknown color: #{color}, x=#{x}, y=#{y}" unless @@colors.has_key? color
+          rslt[:pixels].last << @@colors[color]
         end
       end
-      context[:transformed] = a
+      context[:transformed] = rslt
     end
 
   end
