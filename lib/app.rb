@@ -61,7 +61,7 @@ module WeatherTS
   # This class represents the main application class and entry point.
   class App
     include ::Singleton
-    include WeatherTS::Utils
+    include Utils
 
     # Service Locator.
     def service(key, with = nil)
