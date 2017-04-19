@@ -14,14 +14,14 @@ module WeatherTS
   DB_NAME = 'chmi'
   URL = 'http://portal.chmi.cz/files/portal/docs/meteo/rad/inca-cz/data/czrad-z_max3d/'
 
-  autoload :InfluxdbDao,     'influxdb_dao'
-  autoload :SimpleSniffer,   'simple_sniffer'
-  autoload :LastFilter,      'last_filter'
-  autoload :RandomFilter,    'random_filter'
-  autoload :DbFilter,        'db_filter'
-  autoload :SimpleExtractor, 'simple_extractor'
-  autoload :PngTransformer,  'png_transformer'
-  autoload :InfluxdbLoader,  'influxdb_loader'
+  autoload :InfluxdbDao,       'influxdb_dao'
+  autoload :IndexSniffer,      'index_sniffer'
+  autoload :LastFilter,        'last_filter'
+  autoload :RandomFilter,      'random_filter'
+  autoload :DbFilter,          'db_filter'
+  autoload :DownloadExtractor, 'download_extractor'
+  autoload :PngTransformer,    'png_transformer'
+  autoload :TsdbbLoader,       'tsdb_loader'
 
   # You know: utilities...
   module Utils
@@ -92,7 +92,7 @@ module WeatherTS
         context[:extract] = ds
         service(:extractor).exec
         service(:transformer).exec
-        service(:loader).exec
+#        service(:loader).exec
       end
 
       log.info 'Bye bye'
@@ -111,11 +111,11 @@ WeatherTS::logger.level = Logger::DEBUG if __FILE__ == $0 # DEVELOPMENT MODE
 
 WeatherTS::App.instance.build do
   service :dao,         WeatherTS::InfluxdbDao
-  service :sniffer,     WeatherTS::SimpleSniffer
+  service :sniffer,     WeatherTS::IndexSniffer
   service :filter,      WeatherTS::DbFilter
-  service :extractor,   WeatherTS::SimpleExtractor
+  service :extractor,   WeatherTS::DownloadExtractor
   service :transformer, WeatherTS::PngTransformer
-  service :loader,      WeatherTS::InfluxdbLoader
+  service :loader,      WeatherTS::TsdbbLoader
 end
 
 WeatherTS::App.instance.run

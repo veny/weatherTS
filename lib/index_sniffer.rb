@@ -4,7 +4,7 @@ require 'uri'
 module WeatherTS
 
   # czrad-z_max3d/ ?
-  class SimpleSniffer
+  class IndexSniffer
     include WeatherTS::Utils
 
     # Each link represents an URL where the data can be downloaded.

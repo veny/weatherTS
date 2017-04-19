@@ -1,6 +1,6 @@
 module WeatherTS
 
-  class InfluxdbLoader
+  class TsdbbLoader
     include WeatherTS::Utils
 
     def exec

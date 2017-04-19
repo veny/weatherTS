@@ -3,8 +3,7 @@ require 'tmpdir'
 
 module WeatherTS
 
-  # DownloadExtractor?
-  class SimpleExtractor
+  class DownloadExtractor
     include WeatherTS::Utils
 
     def exec
