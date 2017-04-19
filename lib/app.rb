@@ -11,11 +11,14 @@ module WeatherTS
     attr_accessor :logger
   end
 
+  DB_NAME = 'chmi'
   URL = 'http://portal.chmi.cz/files/portal/docs/meteo/rad/inca-cz/data/czrad-z_max3d/'
 
+  autoload :InfluxdbDao,     'influxdb_dao'
   autoload :SimpleSniffer,   'simple_sniffer'
   autoload :LastFilter,      'last_filter'
   autoload :RandomFilter,    'random_filter'
+  autoload :DbFilter,        'db_filter'
   autoload :SimpleExtractor, 'simple_extractor'
   autoload :PngTransformer,  'png_transformer'
   autoload :InfluxdbLoader,  'influxdb_loader'
@@ -40,7 +43,7 @@ module WeatherTS
       if matches = filename.match(/\.([0-9]+\.[0-9]+)\./)
         date = matches[1]
         t = Time.strptime(date, '%Y%m%d.%H%M') + Time.zone_offset('CEST') # the timestamp is already in UTC
-        return t.to_i
+        return t
       else
         raise 'failed to recognize timestamp in filename'
       end
@@ -54,61 +57,42 @@ module WeatherTS
     include ::Singleton
     include WeatherTS::Utils
 
-    attr_reader :sniffer
-    attr_reader :filter
-    attr_reader :extractor
-    attr_reader :transformer
-    attr_reader :loader
+    # Service Locator.
+    def service(key, with = nil)
+      @services ||= {}
 
-    ###
-    # Constructor.
-    def initialize
-      @sniffer = new_sniffer
-      @filter = new_filter
-      @extractor = new_extractor
-      @transformer = new_transformer
-      @loader = new_loader
+      return @services[key.to_sym] if with.nil? # getter
+
+      if with.is_a? Class
+        @services[key.to_sym] = with.new # setter via constructor
+      else
+        @services[key.to_sym] = with # setter via object
+      end
+      log.debug "added service '#{key}'"
     end
 
-    # Factory method to create a sniffer.
-    def new_sniffer(with=SimpleSniffer)
-      with.new
-    end
-    # Factory method to create a filter.
-    def new_filter(with=LastFilter)
-      with.new
-    end
-    # Factory method to create an extractor.
-    def new_extractor(with=SimpleExtractor)
-      with.new
-    end
-    # Factory method to create a transformer.
-    def new_transformer(with=PngTransformer)
-      with.new
-    end
-    # Factory method to create a loader.
-    def new_loader(with=InfluxdbLoader)
-      with.new
+    # Initializes all services that the engine depends on.
+    def build(&block)
+        # provide access to 'this' in configuration block
+        self.instance_exec(&block)
     end
 
     # Runs the application.
     # This method represents a template method for the process.
     def run
 
-      # Gets possible data source(s).
-      @sniffer.exec
+      # Gets possible data source(s)
+      service(:sniffer).exec
 
       # Filters the data source(s) to extract the relevant only.
-      @filter.exec
-      log.info "filtered to #{context[:to_be_extracted].size} data source(s)"
-      log.debug "to be extracted: #{context[:to_be_extracted]}"
+      service(:filter).exec
 
       # ETL
       context[:to_be_extracted].each do |ds|
         context[:extract] = ds
-        @extractor.exec
-        @transformer.exec
-        @loader.exec
+        service(:extractor).exec
+        service(:transformer).exec
+        service(:loader).exec
       end
 
       log.info 'Bye bye'
@@ -118,12 +102,20 @@ module WeatherTS
 
 end
 
+#####################
+# --== Bootstrap ==--
+
 WeatherTS::logger = Logger.new(STDOUT)
 WeatherTS::logger.level = Logger::INFO
 WeatherTS::logger.level = Logger::DEBUG if __FILE__ == $0 # DEVELOPMENT MODE
-WeatherTS::App.instance.run
 
-# require 'influxdb'
-# db = InfluxDB::Client.new
-# db.create_database('chmi')
-# puts db.list_databases
+WeatherTS::App.instance.build do
+  service :dao,         WeatherTS::InfluxdbDao
+  service :sniffer,     WeatherTS::SimpleSniffer
+  service :filter,      WeatherTS::DbFilter
+  service :extractor,   WeatherTS::SimpleExtractor
+  service :transformer, WeatherTS::PngTransformer
+  service :loader,      WeatherTS::InfluxdbLoader
+end
+
+WeatherTS::App.instance.run

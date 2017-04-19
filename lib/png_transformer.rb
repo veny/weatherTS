@@ -34,7 +34,7 @@ module WeatherTS
       rslt = { timestamp: nil, pixels: [] }
       file = context[:extracted] # e.g. /tmp/pacz2gmaps3.z_max3d.20170406.0850.0.png
       log.info "processing file: #{file}"
-      rslt[:timestamp] = extract_time file
+      rslt[:timestamp] = extract_time(file).to_i
 
       img = ChunkyPNG::Image.from_file file
       log.fatal "unknow image resolution: #{img.width}x#{img.height}" if img.width != 680 or img.height != 460
