@@ -17,7 +17,8 @@ module WeatherTS
       end
       log.info "filtered to #{context[:to_be_extracted].size} data source(s)"
       log.debug "to be extracted: #{context[:to_be_extracted]}"
-context[:to_be_extracted] = [context[:data_source].last]
+# context[:to_be_extracted] = context[:to_be_extracted][-10..-1]
+# context[:to_be_extracted] = [context[:data_source].last]
     end
 
   end
