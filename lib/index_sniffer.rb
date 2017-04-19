@@ -9,7 +9,7 @@ module WeatherTS
 
     # Each link represents an URL where the data can be downloaded.
     def exec
-      uri = URI.parse('http://portal.chmi.cz/files/portal/docs/meteo/rad/inca-cz/data/czrad-z_max3d/')
+      uri = URI.parse("#{CHMI::SITE_URL}/files/portal/docs/meteo/rad/inca-cz/data/czrad-z_max3d/")
       http = Net::HTTP.new(uri.host, uri.port)
       response = http.request(Net::HTTP::Get.new(uri.request_uri))
       html = response.body

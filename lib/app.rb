@@ -11,9 +11,6 @@ module WeatherTS
     attr_accessor :logger
   end
 
-  DB_NAME = 'chmi'
-  URL = 'http://portal.chmi.cz/files/portal/docs/meteo/rad/inca-cz/data/czrad-z_max3d/'
-
   autoload :InfluxdbDao,       'influxdb_dao'
   autoload :IndexSniffer,      'index_sniffer'
   autoload :LastFilter,        'last_filter'
@@ -22,6 +19,15 @@ module WeatherTS
   autoload :DownloadExtractor, 'download_extractor'
   autoload :PngTransformer,    'png_transformer'
   autoload :TsdbbLoader,       'tsdb_loader'
+  autoload :PngLoader,         'png_loader'
+
+  # Just namespace for a CHMI specific constants.
+  module CHMI
+    SITE_URL = 'http://portal.chmi.cz'
+    PNG_X_RANGE = (0..589)
+    PNG_Y_RANGE = (100..409)
+    AGGREGATION_STEP = 10
+  end
 
   # You know: utilities...
   module Utils
@@ -92,7 +98,7 @@ module WeatherTS
         context[:extract] = ds
         service(:extractor).exec
         service(:transformer).exec
-#        service(:loader).exec
+        service(:loader).exec
       end
 
       log.info 'Bye bye'
@@ -116,6 +122,7 @@ WeatherTS::App.instance.build do
   service :extractor,   WeatherTS::DownloadExtractor
   service :transformer, WeatherTS::PngTransformer
   service :loader,      WeatherTS::TsdbbLoader
+  # service :loader,      WeatherTS::PngLoader
 end
 
 WeatherTS::App.instance.run

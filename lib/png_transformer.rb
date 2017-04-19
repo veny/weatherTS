@@ -7,7 +7,7 @@ module WeatherTS
 
     # https://www.w3schools.com/colors/colors_picker.asp
     # http://portal.chmi.cz/files/portal/docs/meteo/rad/inca-cz/#
-    @@colors = {
+    COLORS = {
       # system colors
       '#000000' => 0, # black
       '#c4c4c4' => 0, # gray
@@ -38,12 +38,20 @@ module WeatherTS
 
       img = ChunkyPNG::Image.from_file file
       log.fatal "unknow image resolution: #{img.width}x#{img.height}" if img.width != 680 or img.height != 460
-      (0..595).each do |x|
+      CHMI::PNG_X_RANGE.step(CHMI::AGGREGATION_STEP) do |x|
         rslt[:pixels] << []
-        (100..409).each do |y|
-          color = ChunkyPNG::Color.to_hex(img[x, y], false)
-          log.fatal "unknown color: #{color}, x=#{x}, y=#{y}" unless @@colors.has_key? color
-          rslt[:pixels].last << @@colors[color]
+        CHMI::PNG_Y_RANGE.step(CHMI::AGGREGATION_STEP) do |y|
+          sum = cnt = 0
+          (0..CHMI::AGGREGATION_STEP-1).each do |inc_x|
+            (0..CHMI::AGGREGATION_STEP-1).each do |inc_y|
+              color = ChunkyPNG::Color.to_hex(img[x+inc_x, y+inc_y], false)
+              log.fatal "unknown color: #{color}, x=#{x}, y=#{y}" unless COLORS.has_key? color
+              sum += COLORS[color]
+              cnt += 1
+            end
+          end
+          # round to the nearest multiple of '4'
+          rslt[:pixels].last << (sum.to_f / cnt / 4).round * 4
         end
       end
       context[:transformed] = rslt

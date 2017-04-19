@@ -1,5 +1,7 @@
 module WeatherTS
 
+  # This class represents a filter of data sources to be included into processing.
+  # The filter checks whether there is a time series in DB with the timestamt extracted from file name.
   class DbFilter
     include WeatherTS::Utils
 

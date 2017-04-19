@@ -6,6 +6,8 @@ module WeatherTS
   class InfluxdbDao
     include WeatherTS::Utils
 
+    DB_NAME = 'chmi'
+
     def initialize
       @db = InfluxDB::Client.new
       if @db.list_databases.select {|db| db['name'] == DB_NAME}.empty?
