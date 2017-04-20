@@ -94,7 +94,8 @@ module WeatherTS
       service(:filter).exec
 
       # ETL
-      context[:to_be_extracted].each do |ds|
+      context[:to_be_extracted].each_with_index do |ds, i|
+        log.debug "starting ETL, idx=#{i}"
         context[:extract] = ds
         service(:extractor).exec
         service(:transformer).exec
