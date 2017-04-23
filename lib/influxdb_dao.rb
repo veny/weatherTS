@@ -9,10 +9,11 @@ module WeatherTS
     DB_NAME = 'chmi'
 
     def initialize
-      @db = InfluxDB::Client.new
-      if @db.list_databases.select {|db| db['name'] == DB_NAME}.empty?
+      client = InfluxDB::Client.new
+      if client.list_databases.select {|db| db['name'] == DB_NAME}.empty?
         log.info "database does not exist => create"
-        @db.create_database DB_NAME
+        client.create_database DB_NAME
+        client.create_retention_policy("6weeks.#{DB_NAME}", DB_NAME, '6w', 1, true)
       end
       @db = InfluxDB::Client.new(DB_NAME, {udp: false})
     end
