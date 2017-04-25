@@ -112,18 +112,21 @@ end
 #####################
 # --== Bootstrap ==--
 
-WeatherTS::logger = Logger.new(STDOUT)
-WeatherTS::logger.level = Logger::INFO
-WeatherTS::logger.level = Logger::DEBUG if __FILE__ == $0 # DEVELOPMENT MODE
+if ARGV[0] == '--run'
 
-WeatherTS::App.instance.build do
-  service :dao,         WeatherTS::InfluxdbDao
-  service :sniffer,     WeatherTS::IndexSniffer
-  service :filter,      WeatherTS::DbFilter
-  service :extractor,   WeatherTS::DownloadExtractor
-  service :transformer, WeatherTS::PngTransformer
-  service :loader,      WeatherTS::TsdbbLoader
-  # service :loader,      WeatherTS::PngLoader
+  WeatherTS::logger = Logger.new(STDOUT)
+  WeatherTS::logger.level = Logger::INFO
+  WeatherTS::logger.level = Logger::DEBUG if __FILE__ == $0 # DEVELOPMENT MODE
+
+  WeatherTS::App.instance.build do
+    service :dao,         WeatherTS::InfluxdbDao
+    service :sniffer,     WeatherTS::IndexSniffer
+    service :filter,      WeatherTS::DbFilter
+    service :extractor,   WeatherTS::DownloadExtractor
+    service :transformer, WeatherTS::PngTransformer
+    service :loader,      WeatherTS::TsdbbLoader
+    # service :loader,      WeatherTS::PngLoader
+  end
+
+  WeatherTS::App.instance.run
 end
-
-WeatherTS::App.instance.run

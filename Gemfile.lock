@@ -6,7 +6,7 @@ GEM
     influxdb (0.3.14)
       cause
       json
-    json (2.0.3)
+    json (2.0.2)
     rack (1.6.5)
     rack-protection (1.5.3)
       rack
@@ -22,6 +22,7 @@ PLATFORMS
 DEPENDENCIES
   chunky_png
   influxdb
+  json (= 2.0.2)
   sinatra
 
 BUNDLED WITH

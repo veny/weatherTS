@@ -10,3 +10,15 @@ services:
     image: grafana/grafana:4.2.0
     ports:
       - 3000:3000
+  web:
+    image: ruby:2.4.1-alpine
+    depends_on:
+      - influxdb
+    ports:
+      - 4567:4567
+    # command: tail -f /dev/null
+    command: sh -c 'cd /opt/weatherTS/; bundle install; ruby -I ./lib/ ./lib/web.rb -o 0.0.0.0'
+    volumes:
+      - ./Gemfile:/opt/weatherTS/Gemfile
+      - ./Gemfile.lock:/opt/weatherTS/Gemfile.lock
+      - ./lib:/opt/weatherTS/lib
